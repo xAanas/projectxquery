@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ressources>
+  <ressource id="1.xml" type="image" parent="1.xml">
+    <link name="speak">
+      <ressource id="10.xml" type="video"/>
+      <ressource id="5.xml" type="video"/>
+    </link>
+    <link name="speak_about">
+      <ressource id="3.xml" type="audio"/>
+      <ressource id="7.xml" type="video"/>
+      <ressource id="14.xml" type="video"/>
+      <ressource id="11.xml" type="video"/>
+    </link>
+  </ressource>
+  <ressource id="2.xml" type="audio" parent="2.xml">
+    <link name="speak">
+      <ressource id="5.xml" type="video"/>
+      <ressource id="11.xml" type="video"/>
+    </link>
+    <link name="speak_about">
+      <ressource id="12.xml" type="video"/>
+      <ressource id="9.xml" type="video"/>
+    </link>
+  </ressource>
+  <ressource id="15.xml" type="video" parent="15.xml">
+    <link name="speak">
+      <ressource id="14.xml" type="video"/>
+      <ressource id="10.xml" type="video"/>
+    </link>
+    <link name="speak_about">
+      <ressource id="5.xml" type="video"/>
+      <ressource id="8.xml" type="video"/>
+      <ressource id="9.xml" type="image"/>
+    </link>
+  </ressource>
+  <ressource id="3.xml" type="video" parent="3.xml">
+    <link name="speak">
+      <ressource id="13.xml" type="video"/>
+    </link>
+    <link name="show">
+      <ressource id="11.xml" type="video"/>
+    </link>
+    <link name="speak_about">
+      <ressource id="v1.xml" type="audio"/>
+      <ressource id="2.xml" type="video"/>
+      <ressource id="7.xml" type="video"/>
+      <ressource id="12.xml" type="image"/>
+    </link>
+    <link name="talk_about"/>
+  </ressource>
+  <ressource id="4.xml" type="video" parent="4.xml">
+    <link name="speak">
+      <ressource id="9.xml" type="video"/>
+    </link>
+    <link name="show">
+      <ressource id="2.xml" type="video"/>
+    </link>
+    <link name="speak_about">
+      <ressource id="a1.xml" type="audio"/>
+      <ressource id="v1.xml" type="video"/>
+      <ressource id="v3.xml" type="video"/>
+      <ressource id="5.xml" type="image"/>
+    </link>
+    <link name="speak_about"/>
+  </ressource>
+</ressources>

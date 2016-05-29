@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--AFP NewsML-G2 profile-->
+<!--Processed by SyDocToNewsMLG2 rev10-->
+<newsItem standard="NewsML-G2" standardversion="2.1" guid="V0002" version="4" xml:lang="fr" xmlns="http://iptc.org/std/nar/2006-10-01/" xmlns:afp="http://www.afp.com/iptc-g2/extension/2008-01-01/">
+<catalogRef href="http://www.iptc.org/std/catalog/catalog.IPTC-G2-Standards_1.xml"/>
+<catalogRef href="http://newsml.afp.com/iptc-g2/catalog-2008-01-01.xml"/>
+  <rightsInfo><copyrightHolder literal="Reuters"/><copyrightNotice> 2014 Reuters</copyrightNotice></rightsInfo><itemMeta><itemClass qcode="ninat:Text"/><provider literal="Reuters"/><versionCreated>2009-02-11</versionCreated><firstCreated>2009-02-11</firstCreated><pubStatus qcode="stat:usable"/><title>Growing concern in Muslim world about Islamist militancy: survey</title></itemMeta><contentMeta><contentCreated>2009-02-11</contentCreated><contentModified>2009-02-11</contentModified><located type="cptype:country" qcode="country:NGR"><name>Nigeria</name></located><located type="cptype:country" qcode="country:AFR"><name>Africa</name></located><creator literal=" Georges Gobet"/><contributor role="jrole:captionWriter" literal="fp/bl/fg"/><altId type="idtype:systemRef">Par160297</altId><altId type="idtype:transmitRef">ANG33</altId><language tag="en"/><genre qcode="genre:Quote">
+    <name xml:lang="fr">Quote</name> 
+  </genre><genre qcode="genre:War Conflict">
+    <name xml:lang="fr">War Conflict</name> 
+  </genre>
+    <genre qcode="genre:Politics">
+    <name xml:lang="fr">Politics</name> 
+    </genre><genre qcode="genre:Social Issues">
+      <name xml:lang="fr">Social Issues</name> 
+    </genre>
+    <keyword>Islam</keyword>
+    <keyword>Religion</keyword>
+    <keyword>Boko Haram</keyword>
+    <keyword>War conflits</keyword>
+    <keyword>Killing</keyword>
+    <keyword>Attacks</keyword>
+    <keyword>Islamic terrorism</keyword>
+    <subject type="cpnat:person" qcode="squ:15000006"><name>Mahmoud Abbas</name></subject>
+    <subject type="cpnat:person" qcode="squ:15000006"><name>Abu Bakr Al-Baghdadi</name></subject>
+    <subject type="cpnat:poi"><name>Boko Haram</name></subject><subject type="cpnat:poi"><name>Al-Qaeda</name></subject><subject type="cpnat:abstract" qcode="subj:03004000"><name>War Conflict</name></subject><subject type="cpnat:abstract" qcode="subj:03015001"><name>Politics</name></subject><subject type="cpnat:abstract" qcode="subj:03014000"><name>Urgence situation</name></subject><subject type="cpnat:geoArea"><name>Africa</name></subject><subject type="cpnat:geoArea"><name>Egypt</name></subject><subject type="cpnat:geoArea"><name>Tunisia</name></subject><subject type="cpnat:geoArea"><name>Iraq</name></subject><subject type="cpnat:geoArea"><name>Nigeria</name></subject><creditline>Reuters</creditline><headline>Large majorities in Muslim countries are increasingly worried about Islamist militancy and oppose its best-known groups, such as the global al Qaeda movement, Nigeria's Boko Haram and Hamas, according to a new survey.</headline><description role="drol:caption">Large majorities in Muslim countries are increasingly worried about Islamist militancy and oppose its best-known groups, such as the global al Qaeda movement, Nigeria's Boko Haram and Hamas, according to a new survey.
+      
+      Support for violent tactics such as suicide bombing has fallen in many countries over the past decade, although some states still have significant minorities approving it, the survey by the Washington-based Pew Research Center said.
+      
+      Pew, which regularly tracks opinion on religious issues around the world, polled over 14,000 Muslims in 14 countries in April and May, before the radical Islamic State in Iraq and the Levant (ISIL) group seized a large swathes of Iraq and Syria and announced a new Islamic "caliphate" there.
+      
+      Although it did not ask about ISIL, the survey's findings suggest there would be little support for a call on Tuesday by its leader Abu Bakr al-Baghdadi for Muslims worldwide to take up arms to avenge what he said were wrongs committed against Islam.
+      
+      "As well-publicized bouts of violence, from civil war to suicide bombings, plague the Middle East, Africa and South Asia, concern about Islamic extremism is high among countries with substantial Muslim populations," the survey said.
+      
+      "In most Middle Eastern countries, concern about extremism has increased in the past year," said the survey issued on Tuesday.
+      
+      Lebanon was the country most concerned, with 92 percent of those polled agreeing when asked if they were "concerned about Islamic extremism in our country". Tunisia followed with 82 percent, then Egypt with 75 percent and the Palestinian territories with 65 percent.
+      
+      In other regions, 72 percent of Nigerians, 66 percent of Pakistanis and 63 percent of Malaysians also worried about violent Islamist activity.
+      
+      GROUPS LOSING SUPPORT
+      
+      The survey showed majorities, often quite strong, in most countries against the best-known militant Islamist groups.
+      
+      Negative opinions about al Qaeda were again strongest in Lebanon, with 96 percent against it, followed by Turkey at 85 percent, Jordan at 83 percent and Egypt at 81 percent.
+      
+      The survey was not conducted in Syria or Iraq, where war including al Qaeda forces would make it impossible to interview a representative sample of 1,000 as happened elsewhere.
+      
+      In Nigeria, 79 percent of those polled had negative views of Boko Haram, the insurgent group staging regular attacks in the north that have killed hundreds in recent months.
+      
+      Some 59 percent of Pakistanis were opposed to the Taliban.
+      
+      Islamist group Hamas, which controls the Gaza Strip, has been losing support, the survey said. Negative views about Hamas among Gazans rose to 63 percent from 54 percent last year.
+      
+      The group appears to be more popular in the West Bank, run by President Mahmoud Abbas's Fatah movement, where only 47 percent of those polled had a negative image of Hamas.
+      
+      The survey asked about suicide bombing as a specific form of militant violence and found the highest support for it in the Middle East at 46 percent in the Palestinian territories, a drop from 70 percent in 2007.
+      
+      Support in Lebanon was 29 percent, after being as high as 74 percent in 2002. Most other countries registered support around 20 percent or lower for suicide bombing "to defend Islam from its enemies".</description></contentMeta><contentSet><remoteContent rendition="rnd:highRes" contenttype="txt" href="//t47.txt" size="1792123" durationunit="timeunit:seconds" duration="550" width="2200" height="1552"/><remoteContent rendition="rnd:preview" contenttype="text/txt" href="tag:afp.com,2005:AFP-PH:Par160297:2" size="61425" width="768" height="542"/><remoteContent rendition="rnd:thumbnail" contenttype="text/txt" href="tag:afp.com,2005:AFP-PH:Par160297:3" size="7302" width="192" height="135"/></contentSet></newsItem>
