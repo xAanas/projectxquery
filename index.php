@@ -8,13 +8,13 @@ Developped by xAnas
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
-        <title>Search xml</title>
+        <title>xml</title>
 
         <!-- Bootstrap -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
     </head>
     <body>
-            <form name="searchform" action="traitement.php" method="POST"><br/>
+            <form name="searchform" action="traitement.php" method="POST" enctype="multipart/form-data"><br/>
             <input name="keywords" id="keyword" placeholder="key words...">
             Type de retour :
             <input type="checkbox" name="returntype[]" value="video" c>Vidéo 
@@ -26,8 +26,8 @@ Developped by xAnas
             <br/>
             Afficher les relations 
             <select>
-                <option value="oui">Oui</option>
-                <option value="non">Non</option>
+                <option value="oui">Non</option>
+                <option value="non">Oui</option>
             </select>
             <input type="checkbox" name="relationsemantique[]" value="speak">Speak
             <input type="checkbox" name="relationsemantique[]" value="speak_about">Speak about
