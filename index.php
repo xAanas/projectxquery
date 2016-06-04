@@ -25,7 +25,7 @@ Developped by xAnas
             <hr>
             <br/>
             Afficher les relations 
-            <select>
+            <select name="choixRelationSemantique">
                 <option value="oui">Non</option>
                 <option value="non">Oui</option>
             </select>
@@ -33,6 +33,8 @@ Developped by xAnas
             <input type="checkbox" name="relationsemantique[]" value="speak_about">Speak about
             <input type="checkbox" name="relationsemantique[]" value="talk">Talk
             <input type="checkbox" name="relationsemantique[]" value="talk_about">Talk about
+            <input type="checkbox" name="relationsemantique[]" value="show">Show
+            <input type="checkbox" name="relationsemantique[]" value="appear_in">Appear in
             <br/>
             <hr>
             <br/>
