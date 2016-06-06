@@ -4,62 +4,154 @@ include("BaseXClient.php");
 
 // tableau contenant les keywords du searchfile
 $search_file_keywords = array();
+
+// le tableau qui contiendra les résultats de la recherche
+$tableau_a_afficher = array();
+$tableau_de_key_word_trouver = array();
+$nombre_de_key_word_trouve = array();
+$tableau_de_relation_semantique = array();
+$construire_tableau = 0;
+
+// variable de similarité
+$tableau_des_similarite = array();
+$construire_tableau_similarite = 0;
 // indicateur s'il y a un fichié uploadé par le client
 $file_uploaded = 0;
-//récupérer les choix de relation sémantique
-$choixRelationSemantique = $_POST['choixRelationSemantique'];
-if($choixRelationSemantique == 'oui'){
-  if (isset($_POST['relationsemantique'])) {
-    $relationSemantiqueAExtraire = $_POST['relationsemantique'];
-  }else {
-    $relationSemantiqueAExtraire = "all";
-  }  
-}
+
 // récuperer les keywords
 $keywords = explode("+", $_POST['keywords']);
+
 // récuperer les types de fichier à traiter
-if (isset($_POST['returntype'])) $returntype = $_POST['returntype'];
-  
+if (isset($_POST['returntype']))
+  $returntype = $_POST['returntype'];
+
+//récupérer les choix de relation sémantique
+$choixRelationSemantique = $_POST['choixRelationSemantique'];
+if ($choixRelationSemantique == 'oui') {
+  if (isset($_POST['relationsemantique'])) {
+    $relationSemantiqueAExtraire = $_POST['relationsemantique'];
+  }
+  else {
+    $relationSemantiqueAExtraire = "all";
+  }
+}
+
 // récuperer la liste de fichier.xml dans notre base à traiter
 $xml_db_list = create_xml_list_files("C:\Program Files (x86)\BaseX\bin\bdxml");
 $xml_file_list = $xml_db_list['xml_file_list'];
 $xml_file_nbr = $xml_db_list['xml_file_nbr'];
 
-try {
-  // create session
-  $session = new Session("localhost", 1984, "admin", "admin");
-  // récuperer le fichier.xml de recherche
-  if ($_FILES['searchfile']['name'] != "") {
-    $search_file_name = $_FILES['searchfile']['name'];     //Le nom original du fichier, comme sur le disque du visiteur (exemple : mon_icone.png).
-    $search_file_type = $_FILES['searchfile']['type'];     //Le type du fichier. Par exemple, cela peut être « image/png ».
-    $search_file_tmp_name = $_FILES['searchfile']['tmp_name']; //L'adresse vers le fichier uploadé dans le répertoire temporaire.
-    $search_file_error = $_FILES['searchfile']['error'];    //Le code d'erreur, qui permet de savoir si le fichier a bien été uploadé.
-    $search_file_upload = move_uploaded_file($_FILES['searchfile']['tmp_name'], "C:/Program Files (x86)/BaseX\bin/bdxml/searchdir/" . $search_file_name);
-    if ($search_file_upload) $file_uploaded = 1 ; // si on a réussi à charger le fichier
-    //$search_file_keywords = extact_file_keywords("bdxml/searchdir/" . $search_file_name, $session, $search_file_name);
-    $search_file_keywords_php = extact_file_keywords_php($search_file_name);
-    
-    foreach ($search_file_keywords_php as $alo) echo $alo.'<br/>';
+// récuperer le fichier.xml de recherche
+if ($_FILES['searchfile']['name'] != "") {
+  $search_file_name = $_FILES['searchfile']['name'];     //Le nom original du fichier, comme sur le disque du visiteur (exemple : mon_icone.png).
+  $search_file_type = $_FILES['searchfile']['type'];     //Le type du fichier. Par exemple, cela peut être « image/png ».
+  $search_file_tmp_name = $_FILES['searchfile']['tmp_name']; //L'adresse vers le fichier uploadé dans le répertoire temporaire.
+  $search_file_error = $_FILES['searchfile']['error'];    //Le code d'erreur, qui permet de savoir si le fichier a bien été uploadé.
+  $search_file_upload = move_uploaded_file($_FILES['searchfile']['tmp_name'], "C:/Program Files (x86)/BaseX\bin/bdxml/searchdir/" . $search_file_name);
+  if ($search_file_upload)
+    $file_uploaded = 1; // si on a réussi à charger le fichier
+  else
+    print "upload error";
+  $search_file_keywords = extact_file_keywords_php($search_file_name);
+  $keywords = array_merge($keywords, $search_file_keywords);
+  // tableau intermediaire 
+  $xml_file_list_final = array();
+  // récuperer les critère de calcul de similarité
+  if ($file_uploaded == 1) {
+    if (isset($_POST['similarityoption']))
+      $similarityOption = $_POST['similarityoption'];
+    else
+      $similarityOption = ['headline', 'keyword', 'description'];
   }
-
-  // Construction du tableau
-  echo '<table border="1"><tr><th>fichier</th><th>mot cle</th><th>balise</th></tr>';
-  for ($i = 0; $i < $xml_file_nbr; $i++) {
-    foreach ($keywords as $keyword) {
-      // run query on database
-      $resultat = recherche_keyword_in_xmlfile($keyword, $xml_file_list[$i], $session);
-      if ($resultat != "") {
-        foreach ($resultat as $result) {
-          // insertion d'un ligne dans le tableau
-          echo '<tr><td>' . $xml_file_list[$i] . '</td><td>' . $keyword . '</td><td>' . htmlentities($result) . '</td></tr>';
-        }
+  
+  
+  // calcul de similarité
+  foreach ($xml_file_list as $xml_file) {
+    $similarite = 0;
+    foreach ($similarityOption as $similarity) {
+      if (calcul_similarite("C:\Program Files (x86)\BaseX\bin\bdxml\\" . $xml_file, "C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $search_file_name, $similarity) > 0) {
+        $similarite += calcul_similarite("C:\Program Files (x86)\BaseX\bin\bdxml\\" . $xml_file, "C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $search_file_name, $similarity);
       }
-      else {
-        print "nothing";
+    }
+    if (\count($similarityOption) > 0) {
+      $similarite = $similarite / (\count($similarityOption));
+      if ($similarite > 0) {
+        $xml_file_list_final[] = $xml_file;
+        $tableau_des_similarite[$xml_file] = $similarite;
+        $construire_tableau_similarite = 1;
       }
     }
   }
-  echo '</table>';
+  $xml_file_list = $xml_file_list_final;
+  $xml_file_nbr = \count($xml_file_list);
+  // effacer le fichier uploadé
+  unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $search_file_name);
+}
+
+try {
+  // create session
+  $session = new Session("localhost", 1984, "admin", "admin");
+
+  // recherche des keywords dans les fichiers xml
+  for ($i = 0; $i < $xml_file_nbr; $i++) {
+    // les balises résultat de la recherche dans le fichier.xml
+    $tableau_a_afficher[$xml_file_list[$i]] = array();
+    // les keyword trouvés dans le fichier.xml
+    $tableau_de_key_word_trouver[$xml_file_list[$i]] = "";
+    // le nombre keyword trouvés dans le fichier.xml
+    $nombre_de_key_word_trouve[$xml_file_list[$i]] = 0;
+    foreach ($keywords as $keyword) {
+      // run query on xml files
+      $resultat = recherche_keyword_in_xmlfile($keyword, $xml_file_list[$i], $session);
+      if ($resultat != "" && $resultat != NULL) {
+        $tableau_a_afficher[$xml_file_list[$i]] = array_merge($tableau_a_afficher[$xml_file_list[$i]], $resultat);
+        $tableau_de_key_word_trouver[$xml_file_list[$i]] .= ' -' . $keyword;
+        $nombre_de_key_word_trouve[$xml_file_list[$i]] ++;
+        if ($choixRelationSemantique == "oui")
+          $tableau_de_relation_semantique[$xml_file_list[$i]] = relation_semantique($xml_file_list[$i], $relationSemantiqueAExtraire, $session);
+        $construire_tableau = 1;
+      }
+    }
+  }
+  if ($construire_tableau > 0) {
+    // Construction du tableau
+    echo '<table border="1"><tr><th>fichier</th><th>mot cle</th><th>balise</th>';
+    if($choixRelationSemantique == "oui")
+      echo "<th>relation semantique</th>";
+    echo '</tr>';
+    foreach ($tableau_a_afficher as $key => $resultats_a_afficher) {
+      if (\count($resultats_a_afficher) > 0) {
+        if ($nombre_de_key_word_trouve[$key] > 1) {
+          // insertion d'un ligne dans le tableau
+          echo '<tr><td width="10%">' . $key . '</td><td width="10%">' . $tableau_de_key_word_trouver[$key] . ' </td><td>';
+          foreach ($resultats_a_afficher as $resultat_a_afficher) {
+            echo str_replace($tableau_de_key_word_trouver[$key], '<div style="color:red">' . $tableau_de_key_word_trouver[$key] . '</div>', htmlentities($resultat_a_afficher));
+          }
+          echo '</td>';
+          if($choixRelationSemantique == "oui")
+            echo '<td>'. $tableau_de_relation_semantique[$key] .'</td>';
+          echo '</tr>';
+        }
+      }
+    }
+    echo '</table>';
+  }
+  else {
+    echo " no result :( ";
+  }
+
+  if ($construire_tableau_similarite > 0) {
+    // Construction du tableau de similarité 
+    echo '<table border="1"><tr><th>fichier</th><th>similarity</th></tr>';
+    foreach ($tableau_des_similarite as $key => $one_similarity) {
+      echo '<tr><td>' . $key . '</td><td>' . $one_similarity . '</td></tr>';
+    }
+    echo '</table>';
+  }
+  else {
+    echo "no similarity calculated";
+  }
+
   // close session
   $session->close();
 }
@@ -97,7 +189,7 @@ function extact_file_keywords_php($filename) {
     $result[] = $element1->firstChild->nodeValue;
   }
   // effacer le fichier uploadé
-  unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $filename);
+  //unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $filename);
   return $result;
 }
 
@@ -423,8 +515,197 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
 }
 
 /*
+ * fonction qui renvoi les relations semantiques relatives à un fichier ($file)
+ */
+
+function relation_semantique($file, $relations, $session) {
+  $response = "";
+  if ($relations == "all" || $relations == "") {
+    $response = "";
+    $xquery = 'xquery declare function local:talk_about_fn($x as element()?,$ressources as element()?,$link as element()?,$res as element()?,$p				as xs:string? ,$l as xs:string?)
+        as element()* {
+        let $r :=$res/@id
+              where ($x/@id= $p or  $res/@id=$p) and $link/@name=$l
+              return <li>{data(concat($ressources/@id, " talk_about ", $r))}</li> 
+   
+ };
+ 
+ 
+declare function local:showOrAppear_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 			element()?,$p as xs:string? ,$l as xs:string) as element()*{
+          let $r :=$ressources/@id
+          where $r = $p
+          and $link/@name = $l
+          return       <li>{data (concat($p ,"  ", $l," " , $res/@id))}</li>
+   
+ };
+ 
+ 
+ 
+declare function local:otherLink_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 						element()?,$p as xs:string? ,$l as xs:string) as element()*{
+        let $r := $link/@name
+         where $r = $l
+         and $res/@id=$p
+         return  <li>{data (concat(  $ressources/@id," ",$r," ", $res/@id))}</li>
+ };
+ 
+ 
+declare function local:GlobalRelation($x as element()?, $p as xs:string?, $l as xs:string?)
+        as element()*
+                      { 
+                      
+                     
+                      for $ressources in $x/ressource
+                      for $link in $ressources/link
+                      for $res in $link/ressource   
+                return
+                  
+                   if(compare($l , "all")=0) then(
+                     
+                      if(compare($link/@name,"talk_about")=0)then(
+                         local:talk_about_fn($x,$ressources,$link,$res,$p,"talk_about")
+                        
+                      ) else(
+                              if(compare($link/@name,"show")=0)
+                              then(
+                                local:showOrAppear_fn($x,$ressources,$link,$res,$p,"show")
+                              ) else(
+                                if(  compare( $link/@name, "Appear_In")=0 )  then(
+                                  local:showOrAppear_fn($x,$ressources,$link,$res,$p,"Appear_In")
+                                )else( if(compare($link/@name,"speak_about")=0) then(
+                                   local:otherLink_fn($x,$ressources,$link,$res,$p,"speak_about")
+                                ) else(
+                                 
+                               
+                                local:otherLink_fn($x,$ressources,$link,$res,$p,"speak")
+                              ) )
+                        )
+                      )
+                     
+                     
+                   )else(
+                    
+                     
+                      if(compare($l,"talk_about")=0)then(
+                         local:talk_about_fn($x,$ressources,$link,$res,$p,$l)
+                        
+                      ) else(
+                              if(compare($l,"show")=0  or(compare( $l , "Appear_In")=0)) 
+                              then(
+                                local:showOrAppear_fn($x,$ressources,$link,$res,$p,$l)
+                              ) else(
+                                local:otherLink_fn($x,$ressources,$link,$res,$p,$l)
+                              )
+                        
+                      )
+                   )
+                  
+    
+  };
+      local:GlobalRelation(doc("bdxml\relation\result.xml")/ressources,"' . $file . '","all") ';
+    $result = $session->execute($xquery);
+    if ($result != "") {
+      $response = $result;
+    }
+  }
+  else {
+    $response = "";
+    foreach ($relations as $relation) {
+      $xquery = 'xquery declare function local:talk_about_fn($x as element()?,$ressources as element()?,$link as element()?,$res as element()?,$p				as xs:string? ,$l as xs:string?)
+        as element()* {
+        let $r :=$res/@id
+              where ($x/@id= $p or  $res/@id=$p) and $link/@name=$l
+              return <li>{data(concat($ressources/@id, " talk_about ", $r))}</li> 
+   
+ };
+ 
+ 
+declare function local:showOrAppear_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 			element()?,$p as xs:string? ,$l as xs:string) as element()*{
+          let $r :=$ressources/@id
+          where $r = $p
+          and $link/@name = $l
+          return       <li>{data (concat($p ,"  ", $l," " , $res/@id))}</li>
+   
+ };
+ 
+ 
+ 
+declare function local:otherLink_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 						element()?,$p as xs:string? ,$l as xs:string) as element()*{
+        let $r := $link/@name
+         where $r = $l
+         and $res/@id=$p
+         return  <li>{data (concat(  $ressources/@id," ",$r," ", $res/@id))}</li>
+ };
+ 
+ 
+declare function local:GlobalRelation($x as element()?, $p as xs:string?, $l as xs:string?)
+        as element()*
+                      { 
+                      
+                     
+                      for $ressources in $x/ressource
+                      for $link in $ressources/link
+                      for $res in $link/ressource   
+                return
+                  
+                   if(compare($l , "all")=0) then(
+                     
+                      if(compare($link/@name,"talk_about")=0)then(
+                         local:talk_about_fn($x,$ressources,$link,$res,$p,"talk_about")
+                        
+                      ) else(
+                              if(compare($link/@name,"show")=0)
+                              then(
+                                local:showOrAppear_fn($x,$ressources,$link,$res,$p,"show")
+                              ) else(
+                                if(  compare( $link/@name, "Appear_In")=0 )  then(
+                                  local:showOrAppear_fn($x,$ressources,$link,$res,$p,"Appear_In")
+                                )else( if(compare($link/@name,"speak_about")=0) then(
+                                   local:otherLink_fn($x,$ressources,$link,$res,$p,"speak_about")
+                                ) else(
+                                 
+                               
+                                local:otherLink_fn($x,$ressources,$link,$res,$p,"speak")
+                              ) )
+                        )
+                      )
+                     
+                     
+                   )else(
+                    
+                     
+                      if(compare($l,"talk_about")=0)then(
+                         local:talk_about_fn($x,$ressources,$link,$res,$p,$l)
+                        
+                      ) else(
+                              if(compare($l,"show")=0  or(compare( $l , "Appear_In")=0)) 
+                              then(
+                                local:showOrAppear_fn($x,$ressources,$link,$res,$p,$l)
+                              ) else(
+                                local:otherLink_fn($x,$ressources,$link,$res,$p,$l)
+                              )
+                        
+                      )
+                   )
+                  
+    
+  };
+      local:GlobalRelation(doc("bdxml\relation\result.xml")/ressources,"' . $file . '","' . $relation . '") ';
+      $result = $session->execute($xquery);
+      if ($result != "") {
+        $response .= $result;
+      }
+    }
+  }
+  
+  if($response == "")
+    $response = "No relation available";
+  return $response;
+}
+
+/*
  * c'est la fonction qui calcule la similarité entre deux fichier.xml selon une balise donnée
  */
+
 function calcul_similarite($chemin_doc1, $chemin_doc2, $baliseName) {
   $doc1 = new DOMDocument();
   $doc1->load($chemin_doc1);
@@ -451,5 +732,3 @@ function calcul_similarite($chemin_doc1, $chemin_doc2, $baliseName) {
   $coefficient = count($arr_intersection) / count($arr_union);
   return $coefficient;
 }
-
-
