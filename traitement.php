@@ -97,7 +97,7 @@ try {
     // les balises résultat de la recherche dans le fichier.xml
     $tableau_a_afficher[$xml_file_list[$i]] = array();
     // les keyword trouvés dans le fichier.xml
-    $tableau_de_key_word_trouver[$xml_file_list[$i]] = "";
+    $tableau_de_key_word_trouver[$xml_file_list[$i]] = array();
     // le nombre keyword trouvés dans le fichier.xml
     $nombre_de_key_word_trouve[$xml_file_list[$i]] = 0;
     foreach ($keywords as $keyword) {
@@ -105,7 +105,7 @@ try {
       $resultat = recherche_keyword_in_xmlfile($keyword, $xml_file_list[$i], $session);
       if ($resultat != "" && $resultat != NULL) {
         $tableau_a_afficher[$xml_file_list[$i]] = array_merge($tableau_a_afficher[$xml_file_list[$i]], $resultat);
-        $tableau_de_key_word_trouver[$xml_file_list[$i]] .= ' -' . $keyword;
+        $tableau_de_key_word_trouver[$xml_file_list[$i]][]= $keyword;
         $nombre_de_key_word_trouve[$xml_file_list[$i]] ++;
         if ($choixRelationSemantique == "oui")
           $tableau_de_relation_semantique[$xml_file_list[$i]] = relation_semantique($xml_file_list[$i], $relationSemantiqueAExtraire, $session);
@@ -123,13 +123,19 @@ try {
       if (\count($resultats_a_afficher) > 0) {
         if ($nombre_de_key_word_trouve[$key] > 1) {
           // insertion d'un ligne dans le tableau
-          echo '<tr><td width="10%">' . $key . '</td><td width="10%">' . $tableau_de_key_word_trouver[$key] . ' </td><td>';
+          echo '<tr><td width="10%">' . $key . '</td><td width="15%">'; 
+          foreach($tableau_de_key_word_trouver[$key] as $word)
+            echo ' - ' . $word;
+          echo ' </td><td>';
           foreach ($resultats_a_afficher as $resultat_a_afficher) {
-            echo str_replace($tableau_de_key_word_trouver[$key], '<div style="color:red">' . $tableau_de_key_word_trouver[$key] . '</div>', htmlentities($resultat_a_afficher));
+            foreach($tableau_de_key_word_trouver[$key] as $word){
+              $resultat_a_afficher = str_replace($word, '<div style="color:red;display:inline">'. $word .'</div>', $resultat_a_afficher);
+            }  
+            echo $resultat_a_afficher;
           }
           echo '</td>';
           if($choixRelationSemantique == "oui")
-            echo '<td>'. $tableau_de_relation_semantique[$key] .'</td>';
+            echo '<td width="15%">'. $tableau_de_relation_semantique[$key] .'</td>';
           echo '</tr>';
         }
       }
@@ -236,7 +242,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/catalogRef contains text "' . $keyword . '"
     return $x/catalogRef');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <rightsInfo><copyrightHolder>
@@ -244,7 +250,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/copyrightHolder contains text "' . $keyword . '"
     return $x/copyrightHolder');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <rightsInfo><copyrightHolder>
@@ -252,7 +258,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/copyrightNotice contains text "' . $keyword . '"
     return $x/copyrightNotice');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><itemClass>
@@ -260,7 +266,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/itemClass contains text "' . $keyword . '"
     return $x/itemClass');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><provider>
@@ -268,7 +274,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/provider contains text "' . $keyword . '"
     return $x/provider');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><versionCreated>
@@ -276,7 +282,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/versionCreated contains text "' . $keyword . '"
     return $x/versionCreated');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><firstCreated>
@@ -284,7 +290,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/firstCreated contains text "' . $keyword . '"
     return $x/firstCreated');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><pubStatus>
@@ -292,7 +298,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/pubStatus contains text "' . $keyword . '"
     return $x/pubStatus');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><title>
@@ -300,7 +306,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/title contains text "' . $keyword . '"
     return $x/title');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contentCreated>
@@ -308,7 +314,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/contentCreated contains text "' . $keyword . '"
     return $x/contentCreated');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contentModified>
@@ -316,7 +322,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/contentModified contains text "' . $keyword . '"
     return $x/contentModified');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><located><name>
@@ -324,7 +330,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/name contains text "' . $keyword . '"
     return $x/name');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><creator>[literal]
@@ -332,7 +338,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@literal contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contributor>[role]
@@ -340,7 +346,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@role contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contributor>[literal]
@@ -348,7 +354,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@literal contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><altId>
@@ -356,7 +362,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/altId contains text "' . $keyword . '"
     return $x/altId');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><altId>[type]
@@ -364,7 +370,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@type contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><language>[tag]
@@ -372,7 +378,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@tag contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre>[qcode]
@@ -380,7 +386,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@qcode contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre><name>
@@ -388,7 +394,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/name contains text "' . $keyword . '"
     return $x/name');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre><name>[xml:lang]
@@ -396,7 +402,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@xml:lang contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><keyword>
@@ -404,7 +410,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/keyword contains text "' . $keyword . '"
     return $x/keyword');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject>[type]
@@ -412,7 +418,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@type contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject>[qcode]
@@ -420,7 +426,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@qcode contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject><name>
@@ -428,7 +434,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/name contains text "' . $keyword . '"
     return $x/name');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><creditline>
@@ -436,7 +442,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/creditline contains text "' . $keyword . '"
     return $x/creditline');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><headline>
@@ -444,7 +450,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/headline contains text "' . $keyword . '"
     return $x/headline');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><description>
@@ -452,7 +458,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/description contains text "' . $keyword . '"
     return $x/description');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><description>[role]
@@ -460,7 +466,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@role contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[rendition]
@@ -468,7 +474,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@rendition contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[contenttype]
@@ -476,7 +482,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@contenttype contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[href]
@@ -484,7 +490,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@href contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[size]
@@ -492,7 +498,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@size contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[width]
@@ -500,7 +506,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@width contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[height]
@@ -508,7 +514,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@height contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = $result;
+    $resultat [] = '<li>'.htmlentities($result).'</li>';
   }
 
   return $resultat;
