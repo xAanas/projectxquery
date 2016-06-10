@@ -188,17 +188,21 @@ try {
   else {
     echo "no similarity calculated";
   }
-  
+
   // construction du retour json
   $fichier_xml_trouver = array();
-  foreach($tableau_a_afficher as $key => $value) {
-    $fichier_xml_trouver[] = $key;
+  foreach ($tableau_a_afficher as $key => $value) {
+    if (\count($value) > 0) {
+      if ($nombre_de_key_word_trouve[$key] > 1) {
+        $fichier_xml_trouver[] = $key;
+      }
+    }
   }
-  $resultat_json = array($fichier_xml_trouver,$relationsemantique_for_json);
-  
+  $resultat_json = array("nodes" => $fichier_xml_trouver, "edges" => $relationsemantique_for_json);
+
   var_dump(json_encode($resultat_json));
-  
-  
+
+
   // close session
   $session->close();
 }
