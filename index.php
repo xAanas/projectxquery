@@ -23,7 +23,7 @@ Developped by xAnas
             <input type="checkbox" name="returntype[]" value="video" c>Vidéo 
             <input type="checkbox" name="returntype[]" value="image" >Image 
             <input type="checkbox" name="returntype[]" value="audio" >Audio 
-            <input type="checkbox" name="returntype[]" value="texte" >Texte 
+            <input type="checkbox" name="returntype[]" value="T ext" >Texte 
             <br/>
             <hr>
             Afficher les relations 

@@ -1,7 +1,7 @@
 <?php
 
 include("BaseXClient.php");
-
+//include('fcontext.php');
 // tableau contenant les keywords du searchfile
 $search_file_keywords = array();
 
@@ -10,7 +10,11 @@ $tableau_a_afficher = array();
 $tableau_de_key_word_trouver = array();
 $nombre_de_key_word_trouve = array();
 $tableau_de_relation_semantique = array();
+$relationsemantique_for_json = array();
 $construire_tableau = 0;
+
+// variable qui contient les contextes des mots clés saisis c'est un tableau de tableau
+$context_des_mots_cles_saisis = array();
 
 // variable de similarité
 $tableau_des_similarite = array();
@@ -21,7 +25,11 @@ $file_uploaded = 0;
 // récuperer les keywords
 $keywords = explode("+", $_POST['keywords']);
 
+// le context des keywords
+//$keywords_context = calcul_context($keywords);
+//print_r($keywords_context);
 // récuperer les types de fichier à traiter
+$returntype = array();
 if (isset($_POST['returntype']))
   $returntype = $_POST['returntype'];
 
@@ -41,56 +49,70 @@ $xml_db_list = create_xml_list_files("C:\Program Files (x86)\BaseX\bin\bdxml");
 $xml_file_list = $xml_db_list['xml_file_list'];
 $xml_file_nbr = $xml_db_list['xml_file_nbr'];
 
-// récuperer le fichier.xml de recherche
-if ($_FILES['searchfile']['name'] != "") {
-  $search_file_name = $_FILES['searchfile']['name'];     //Le nom original du fichier, comme sur le disque du visiteur (exemple : mon_icone.png).
-  $search_file_type = $_FILES['searchfile']['type'];     //Le type du fichier. Par exemple, cela peut être « image/png ».
-  $search_file_tmp_name = $_FILES['searchfile']['tmp_name']; //L'adresse vers le fichier uploadé dans le répertoire temporaire.
-  $search_file_error = $_FILES['searchfile']['error'];    //Le code d'erreur, qui permet de savoir si le fichier a bien été uploadé.
-  $search_file_upload = move_uploaded_file($_FILES['searchfile']['tmp_name'], "C:/Program Files (x86)/BaseX\bin/bdxml/searchdir/" . $search_file_name);
-  if ($search_file_upload)
-    $file_uploaded = 1; // si on a réussi à charger le fichier
-  else
-    print "upload error";
-  $search_file_keywords = extact_file_keywords_php($search_file_name);
-  $keywords = array_merge($keywords, $search_file_keywords);
-  // tableau intermediaire 
-  $xml_file_list_final = array();
-  // récuperer les critère de calcul de similarité
-  if ($file_uploaded == 1) {
-    if (isset($_POST['similarityoption']))
-      $similarityOption = $_POST['similarityoption'];
-    else
-      $similarityOption = ['headline', 'keyword', 'description'];
-  }
-  
-  
-  // calcul de similarité
-  foreach ($xml_file_list as $xml_file) {
-    $similarite = 0;
-    foreach ($similarityOption as $similarity) {
-      if (calcul_similarite("C:\Program Files (x86)\BaseX\bin\bdxml\\" . $xml_file, "C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $search_file_name, $similarity) > 0) {
-        $similarite += calcul_similarite("C:\Program Files (x86)\BaseX\bin\bdxml\\" . $xml_file, "C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $search_file_name, $similarity);
-      }
-    }
-    if (\count($similarityOption) > 0) {
-      $similarite = $similarite / (\count($similarityOption));
-      if ($similarite > 0) {
-        $xml_file_list_final[] = $xml_file;
-        $tableau_des_similarite[$xml_file] = $similarite;
-        $construire_tableau_similarite = 1;
-      }
-    }
-  }
-  $xml_file_list = $xml_file_list_final;
-  $xml_file_nbr = \count($xml_file_list);
-  // effacer le fichier uploadé
-  unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $search_file_name);
-}
-
 try {
   // create session
   $session = new Session("localhost", 1984, "admin", "admin");
+
+// filtrer selon le type de fichier
+  if (count($returntype) > 0) {
+    $tableau_intermediaire = array();
+    foreach ($xml_file_list as $xml_file) {
+      // récuperer le type du fichier
+      $type = type_du_fichier("bdxml\\" . $xml_file, $session);
+      // vérifier s'il existe dans la liste des types demander par l'utilisateur
+      if (in_array($type, $returntype))
+        $tableau_intermediaire [] = $xml_file;
+    }
+    $xml_file_list = $tableau_intermediaire;
+    $xml_file_nbr = count($xml_file_list);
+  }
+
+// récuperer le fichier.xml de recherche
+  if ($_FILES['searchfile']['name'] != "") {
+    $search_file_name = $_FILES['searchfile']['name'];     //Le nom original du fichier, comme sur le disque du visiteur (exemple : mon_icone.png).
+    $search_file_type = $_FILES['searchfile']['type'];     //Le type du fichier. Par exemple, cela peut être « image/png ».
+    $search_file_tmp_name = $_FILES['searchfile']['tmp_name']; //L'adresse vers le fichier uploadé dans le répertoire temporaire.
+    $search_file_error = $_FILES['searchfile']['error'];    //Le code d'erreur, qui permet de savoir si le fichier a bien été uploadé.
+    $search_file_upload = move_uploaded_file($_FILES['searchfile']['tmp_name'], "C:/Program Files (x86)/BaseX\bin/bdxml/searchdir/" . $search_file_name);
+    if ($search_file_upload)
+      $file_uploaded = 1; // si on a réussi à charger le fichier
+    else
+      print "upload error";
+    $search_file_keywords = extact_file_keywords_php($search_file_name);
+    $keywords = array_merge($keywords, $search_file_keywords);
+    // tableau intermediaire 
+    $xml_file_list_final = array();
+    // récuperer les critère de calcul de similarité
+    if ($file_uploaded == 1) {
+      if (isset($_POST['similarityoption']))
+        $similarityOption = $_POST['similarityoption'];
+      else
+        $similarityOption = ['headline', 'keyword', 'description'];
+    }
+
+
+    // calcul de similarité
+    foreach ($xml_file_list as $xml_file) {
+      $similarite = 0;
+      foreach ($similarityOption as $similarity) {
+        if (calcul_similarite("C:\Program Files (x86)\BaseX\bin\bdxml\\" . $xml_file, "C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $search_file_name, $similarity) > 0) {
+          $similarite += calcul_similarite("C:\Program Files (x86)\BaseX\bin\bdxml\\" . $xml_file, "C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $search_file_name, $similarity);
+        }
+      }
+      if (\count($similarityOption) > 0) {
+        $similarite = $similarite / (\count($similarityOption));
+        if ($similarite > 0) {
+          $xml_file_list_final[] = $xml_file;
+          $tableau_des_similarite[$xml_file] = $similarite;
+          $construire_tableau_similarite = 1;
+        }
+      }
+    }
+    $xml_file_list = $xml_file_list_final;
+    $xml_file_nbr = \count($xml_file_list);
+    // effacer le fichier uploadé
+    unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $search_file_name);
+  }
 
   // recherche des keywords dans les fichiers xml
   for ($i = 0; $i < $xml_file_nbr; $i++) {
@@ -105,37 +127,46 @@ try {
       $resultat = recherche_keyword_in_xmlfile($keyword, $xml_file_list[$i], $session);
       if ($resultat != "" && $resultat != NULL) {
         $tableau_a_afficher[$xml_file_list[$i]] = array_merge($tableau_a_afficher[$xml_file_list[$i]], $resultat);
-        $tableau_de_key_word_trouver[$xml_file_list[$i]][]= $keyword;
+        $tableau_de_key_word_trouver[$xml_file_list[$i]][] = $keyword;
         $nombre_de_key_word_trouve[$xml_file_list[$i]] ++;
-        if ($choixRelationSemantique == "oui")
+        if ($choixRelationSemantique == "oui") {
           $tableau_de_relation_semantique[$xml_file_list[$i]] = relation_semantique($xml_file_list[$i], $relationSemantiqueAExtraire, $session);
+          if ($tableau_de_relation_semantique[$xml_file_list[$i]] != "No relation available") {
+            $intermediaire = relation_semantique($xml_file_list[$i], $relationSemantiqueAExtraire, $session);
+            $var_taw = explode("|", trim($intermediaire, " |\t\n\r\0\x0B"));
+            foreach ($var_taw as $var_t) {
+              $var_post = explode(",", $var_t);
+              $relationsemantique_for_json[] = array(trim($var_post[0], " \t\n\r\0\x0B"), $var_post[2], array("color" => "#00A0B0", "label" => $var_post[1]));
+            }
+          }
+        }
         $construire_tableau = 1;
       }
     }
   }
   if ($construire_tableau > 0) {
-    // Construction du tableau
+    // Construction du tableau du resultat
     echo '<table border="1"><tr><th>fichier</th><th>mot cle</th><th>balise</th>';
-    if($choixRelationSemantique == "oui")
+    if ($choixRelationSemantique == "oui")
       echo "<th>relation semantique</th>";
     echo '</tr>';
     foreach ($tableau_a_afficher as $key => $resultats_a_afficher) {
       if (\count($resultats_a_afficher) > 0) {
         if ($nombre_de_key_word_trouve[$key] > 1) {
           // insertion d'un ligne dans le tableau
-          echo '<tr><td width="10%">' . $key . '</td><td width="15%">'; 
-          foreach($tableau_de_key_word_trouver[$key] as $word)
+          echo '<tr><td width="10%">' . $key . '</td><td width="15%">';
+          foreach ($tableau_de_key_word_trouver[$key] as $word)
             echo ' - ' . $word;
           echo ' </td><td>';
           foreach ($resultats_a_afficher as $resultat_a_afficher) {
-            foreach($tableau_de_key_word_trouver[$key] as $word){
-              $resultat_a_afficher = str_replace($word, '<div style="color:red;display:inline">'. $word .'</div>', $resultat_a_afficher);
-            }  
+            foreach ($tableau_de_key_word_trouver[$key] as $word) {
+              $resultat_a_afficher = str_replace($word, '<div style="color:red;display:inline">' . $word . '</div>', $resultat_a_afficher);
+            }
             echo $resultat_a_afficher;
           }
           echo '</td>';
-          if($choixRelationSemantique == "oui")
-            echo '<td width="15%">'. $tableau_de_relation_semantique[$key] .'</td>';
+          if ($choixRelationSemantique == "oui")
+            echo '<td width="15%">' . str_replace(",", " ", str_replace("|", " ", $tableau_de_relation_semantique[$key])) . '</td>';
           echo '</tr>';
         }
       }
@@ -157,46 +188,23 @@ try {
   else {
     echo "no similarity calculated";
   }
-
+  
+  // construction du retour json
+  $fichier_xml_trouver = array();
+  foreach($tableau_a_afficher as $key => $value) {
+    $fichier_xml_trouver[] = $key;
+  }
+  $resultat_json = array($fichier_xml_trouver,$relationsemantique_for_json);
+  
+  var_dump(json_encode($resultat_json));
+  
+  
   // close session
   $session->close();
 }
 catch (Exception $e) {
   // print exception
   print $e->getMessage();
-}
-
-/*
- * extraction des keywords du fichier uploadé par l'utilisateur
- */
-
-function extact_file_keywords($path, $session, $filename) {
-  // construire la requête 
-  $xquery = 'xquery for $x in doc("' . $path . '")/newsItem/contentMeta/keyword
-  return data($x)';
-  // executer la requête
-  $result = $session->execute($xquery);
-  // effacer le fichier uploadé
-  unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $filename);
-  return $result;
-}
-
-/*
- * extraction des keywords du fichier uploadé par l'utilisateur avec php
- */
-
-function extact_file_keywords_php($filename) {
-  $doc1 = new DOMDocument();
-  $doc1->load("C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $filename);
-  $result = array();
-
-  $nodes1 = $doc1->getElementsByTagName("keyword");
-  foreach ($nodes1 as $element1) {
-    $result[] = $element1->firstChild->nodeValue;
-  }
-  // effacer le fichier uploadé
-  //unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $filename);
-  return $result;
 }
 
 /*
@@ -233,6 +241,56 @@ function create_xml_list_files($path) {
   }
 }
 
+/*
+ * retourner le type du fichier.xml (video,text,audio ou image)
+ */
+
+function type_du_fichier($file, $session) {
+  // construire la requête 
+  $xquery = 'xquery for $x in doc("' . $file . '")/newsItem/itemMeta/itemClass
+             return fn:substring(data($x/@qcode),7)';
+  // executer la requête
+  $result = $session->execute($xquery);
+  return $result;
+}
+
+/*
+ * extraction des keywords du fichier uploadé par l'utilisateur avec xquery
+ */
+
+function extact_file_keywords($path, $session, $filename) {
+  // construire la requête 
+  $xquery = 'xquery for $x in doc("' . $path . '")/newsItem/contentMeta/keyword
+  return data($x)';
+  // executer la requête
+  $result = $session->execute($xquery);
+  // effacer le fichier uploadé
+  unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $filename);
+  return $result;
+}
+
+/*
+ * extraction des keywords du fichier uploadé par l'utilisateur avec php
+ */
+
+function extact_file_keywords_php($filename) {
+  $doc1 = new DOMDocument();
+  $doc1->load("C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\" . $filename);
+  $result = array();
+
+  $nodes1 = $doc1->getElementsByTagName("keyword");
+  foreach ($nodes1 as $element1) {
+    $result[] = $element1->firstChild->nodeValue;
+  }
+  // effacer le fichier uploadé
+  //unlink('C:\Program Files (x86)\BaseX\bin\bdxml\searchdir\\' . $filename);
+  return $result;
+}
+
+/*
+ * recherche les fichiers qui contiennent les keyword inserer par l'utilisateur
+ */
+
 function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
   // dans ce tableau on va mettre les balises qui contiennent le mots clé
   $resultat = array();
@@ -242,7 +300,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/catalogRef contains text "' . $keyword . '"
     return $x/catalogRef');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <rightsInfo><copyrightHolder>
@@ -250,7 +308,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/copyrightHolder contains text "' . $keyword . '"
     return $x/copyrightHolder');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <rightsInfo><copyrightHolder>
@@ -258,7 +316,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/copyrightNotice contains text "' . $keyword . '"
     return $x/copyrightNotice');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><itemClass>
@@ -266,7 +324,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/itemClass contains text "' . $keyword . '"
     return $x/itemClass');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><provider>
@@ -274,7 +332,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/provider contains text "' . $keyword . '"
     return $x/provider');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><versionCreated>
@@ -282,7 +340,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/versionCreated contains text "' . $keyword . '"
     return $x/versionCreated');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><firstCreated>
@@ -290,7 +348,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/firstCreated contains text "' . $keyword . '"
     return $x/firstCreated');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><pubStatus>
@@ -298,7 +356,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/pubStatus contains text "' . $keyword . '"
     return $x/pubStatus');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><title>
@@ -306,7 +364,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/title contains text "' . $keyword . '"
     return $x/title');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contentCreated>
@@ -314,7 +372,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/contentCreated contains text "' . $keyword . '"
     return $x/contentCreated');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contentModified>
@@ -322,7 +380,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/contentModified contains text "' . $keyword . '"
     return $x/contentModified');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><located><name>
@@ -330,7 +388,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/name contains text "' . $keyword . '"
     return $x/name');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><creator>[literal]
@@ -338,7 +396,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@literal contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contributor>[role]
@@ -346,7 +404,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@role contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contributor>[literal]
@@ -354,7 +412,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@literal contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><altId>
@@ -362,7 +420,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/altId contains text "' . $keyword . '"
     return $x/altId');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><altId>[type]
@@ -370,7 +428,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@type contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><language>[tag]
@@ -378,7 +436,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@tag contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre>[qcode]
@@ -386,7 +444,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@qcode contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre><name>
@@ -394,7 +452,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/name contains text "' . $keyword . '"
     return $x/name');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre><name>[xml:lang]
@@ -402,7 +460,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@xml:lang contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><keyword>
@@ -410,7 +468,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/keyword contains text "' . $keyword . '"
     return $x/keyword');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject>[type]
@@ -418,7 +476,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@type contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject>[qcode]
@@ -426,7 +484,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@qcode contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject><name>
@@ -434,7 +492,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/name contains text "' . $keyword . '"
     return $x/name');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><creditline>
@@ -442,7 +500,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/creditline contains text "' . $keyword . '"
     return $x/creditline');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><headline>
@@ -450,7 +508,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/headline contains text "' . $keyword . '"
     return $x/headline');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><description>
@@ -458,7 +516,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/description contains text "' . $keyword . '"
     return $x/description');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><description>[role]
@@ -466,7 +524,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@role contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[rendition]
@@ -474,7 +532,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@rendition contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[contenttype]
@@ -482,7 +540,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@contenttype contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[href]
@@ -490,7 +548,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@href contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[size]
@@ -498,7 +556,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@size contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[width]
@@ -506,7 +564,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@width contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[height]
@@ -514,7 +572,7 @@ function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
     where $x/@height contains text "' . $keyword . '"
     return $x');
   if ($result != "") {
-    $resultat [] = '<li>'.htmlentities($result).'</li>';
+    $resultat [] = '<li>' . htmlentities($result) . '</li>';
   }
 
   return $resultat;
@@ -529,34 +587,36 @@ function relation_semantique($file, $relations, $session) {
   if ($relations == "all" || $relations == "") {
     $response = "";
     $xquery = 'xquery declare function local:talk_about_fn($x as element()?,$ressources as element()?,$link as element()?,$res as element()?,$p				as xs:string? ,$l as xs:string?)
-        as element()* {
+        as xs:string* {
         let $r :=$res/@id
               where ($x/@id= $p or  $res/@id=$p) and $link/@name=$l
-              return <li>{data(concat($ressources/@id, " talk_about ", $r))}</li> 
+              return data(concat($ressources/@id,",", " talk_about ",",", $r,"|")) 
    
  };
  
  
-declare function local:showOrAppear_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 			element()?,$p as xs:string? ,$l as xs:string) as element()*{
+declare function local:showOrAppear_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 			element()?,$p as xs:string? ,$l as xs:string) 
+as xs:string*{
           let $r :=$ressources/@id
           where $r = $p
           and $link/@name = $l
-          return       <li>{data (concat($p ,"  ", $l," " , $res/@id))}</li>
+          return       data (concat($p ,",", $l,"," , $res/@id,"|"))
    
  };
  
  
  
-declare function local:otherLink_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 						element()?,$p as xs:string? ,$l as xs:string) as element()*{
+declare function local:otherLink_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 						element()?,$p as xs:string? ,$l as xs:string) 
+as xs:string*{
         let $r := $link/@name
          where $r = $l
          and $res/@id=$p
-         return  <li>{data (concat(  $ressources/@id," ",$r," ", $res/@id))}</li>
+         return  data (concat(  $ressources/@id,",",$r,",", $res/@id,"|"))
  };
  
  
 declare function local:GlobalRelation($x as element()?, $p as xs:string?, $l as xs:string?)
-        as element()*
+        as xs:string*
                       { 
                       
                      
@@ -617,34 +677,36 @@ declare function local:GlobalRelation($x as element()?, $p as xs:string?, $l as 
     $response = "";
     foreach ($relations as $relation) {
       $xquery = 'xquery declare function local:talk_about_fn($x as element()?,$ressources as element()?,$link as element()?,$res as element()?,$p				as xs:string? ,$l as xs:string?)
-        as element()* {
+        as xs:string* {
         let $r :=$res/@id
               where ($x/@id= $p or  $res/@id=$p) and $link/@name=$l
-              return <li>{data(concat($ressources/@id, " talk_about ", $r))}</li> 
+              return data(concat($ressources/@id, "," , " talk_about ", "," , $r,"|"))
    
  };
  
  
-declare function local:showOrAppear_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 			element()?,$p as xs:string? ,$l as xs:string) as element()*{
+declare function local:showOrAppear_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 			element()?,$p as xs:string? ,$l as xs:string) 
+as xs:string*{
           let $r :=$ressources/@id
           where $r = $p
           and $link/@name = $l
-          return       <li>{data (concat($p ,"  ", $l," " , $res/@id))}</li>
+          return       data (concat($p ,",", $l,"," , $res/@id,"|"))
    
  };
  
  
  
-declare function local:otherLink_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 						element()?,$p as xs:string? ,$l as xs:string) as element()*{
+declare function local:otherLink_fn($x as element()?,$ressources as element()?,$link as 					element()?,$res as 						element()?,$p as xs:string? ,$l as xs:string) 
+as xs:string*{
         let $r := $link/@name
          where $r = $l
          and $res/@id=$p
-         return  <li>{data (concat(  $ressources/@id," ",$r," ", $res/@id))}</li>
+         return  data (concat(  $ressources/@id,",",$r,",", $res/@id,"|"))
  };
  
  
 declare function local:GlobalRelation($x as element()?, $p as xs:string?, $l as xs:string?)
-        as element()*
+        as xs:string*
                       { 
                       
                      
@@ -702,8 +764,8 @@ declare function local:GlobalRelation($x as element()?, $p as xs:string?, $l as 
       }
     }
   }
-  
-  if($response == "")
+
+  if ($response == "")
     $response = "No relation available";
   return $response;
 }

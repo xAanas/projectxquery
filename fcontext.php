@@ -4,17 +4,19 @@
  * fcontextv4
  */
 require('opencalais2.php');
+
 unset($T);
 unset($opencalais_result);
 $T = array('paris', 'decision', 'Fran�ois hollande', 'Meeting'); //'Francois hollande','Meeting',,'Paris');
-$com_result = calcul_context($T);
+
+/*$com_result = calcul_context($T);
 
 echo '</br>';
 echo '<pre>';
 print_r($com_result);
 echo '</pre>';
 echo '</br>';
-echo $com_result;
+echo $com_result;*/
 
 function calcul_context($T) {
   $T_result = fcontext($T);
@@ -29,7 +31,7 @@ function calcul_context($T) {
 function getOpencalaisTopic($opencalais_result) {
   $i = 0;
   $open_tab = null;
-  foreach ($opencalais_result as $cle => $e) {
+  foreach ($opencalais_result as $key => $e) {
     if ($e->_typeGroup == 'topics') {
       $open_tab[$i] = $e->name;
       $i++;
