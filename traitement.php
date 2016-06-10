@@ -198,7 +198,12 @@ try {
       }
     }
   }
-  $resultat_json = array("nodes" => $fichier_xml_trouver, "edges" => $relationsemantique_for_json);
+  if (\count($relationsemantique_for_json) > 0) {
+    $resultat_json = array("nodes" => $fichier_xml_trouver, "edges" => $relationsemantique_for_json);
+  }
+  else {
+    $resultat_json = array("nodes" => $fichier_xml_trouver,"edges" => "no relation available");
+  }
 
   var_dump(json_encode($resultat_json));
 
