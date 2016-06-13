@@ -129,6 +129,7 @@ try {
         $tableau_a_afficher[$xml_file_list[$i]] = array_merge($tableau_a_afficher[$xml_file_list[$i]], $resultat);
         $tableau_de_key_word_trouver[$xml_file_list[$i]][] = $keyword;
         $nombre_de_key_word_trouve[$xml_file_list[$i]] ++;
+        // chercher les relations sémantique
         if ($choixRelationSemantique == "oui") {
           $tableau_de_relation_semantique[$xml_file_list[$i]] = relation_semantique($xml_file_list[$i], $relationSemantiqueAExtraire, $session);
           if ($tableau_de_relation_semantique[$xml_file_list[$i]] != "No relation available") {
@@ -136,6 +137,7 @@ try {
             $var_taw = explode("|", trim($intermediaire, " |\t\n\r\0\x0B"));
             foreach ($var_taw as $var_t) {
               $var_post = explode(",", $var_t);
+              // constuction du tableau des relation pour le json sous la forme [fichier1,relation,fichier2]
               $relationsemantique_for_json[] = array(trim($var_post[0], " \t\n\r\0\x0B"), $var_post[2], array("color" => "#00A0B0", "label" => $var_post[1]));
             }
           }
@@ -198,14 +200,21 @@ try {
       }
     }
   }
+  $resultat_json = "";
   if (\count($relationsemantique_for_json) > 0) {
     $resultat_json = array("nodes" => $fichier_xml_trouver, "edges" => $relationsemantique_for_json);
   }
   else {
     $resultat_json = array("nodes" => $fichier_xml_trouver,"edges" => "no relation available");
   }
-
-  var_dump(json_encode($resultat_json));
+  
+  // ecrire le json dans un fichier json/xquery_json_result.txt
+  $xquery_json_result_file = fopen('json/xquery_json_result.txt', 'r+');
+  ftruncate($xquery_json_result_file, 0);
+  fseek($xquery_json_result_file, 0);
+  fputs($xquery_json_result_file,  json_encode($resultat_json));
+  fclose($xquery_json_result_file);
+  //var_dump(json_encode($resultat_json));
 
 
   // close session
