@@ -7,16 +7,23 @@ Developped by xAnas
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        
+
         <title>xml</title>
 
         <!-- Bootstrap -->
         <link href="css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; }
+            .autocomplete-suggestion { padding: 2px 5px; white-space: nowrap; overflow: hidden; }
+            .autocomplete-selected { background: #F0F0F0; }
+            .autocomplete-suggestions strong { font-weight: normal; color: #3399FF; }
+        </style> 
     </head>
     <body>
-            <form name="searchform" action="traitement.php" method="POST" enctype="multipart/form-data"><br/>
+        <!--<form name="searchform" method="get" action="index.php" ><br/>-->
+        <form name="searchform" action="traitement.php" method="POST" enctype="multipart/form-data"><br/>
             Entrer vos mots clés : 
-            <input name="keywords" id="keyword" placeholder="key words...">
+            <input value="<?php if (isset($_GET['keywords'])) echo $_GET['keywords']; ?>" name="keywords" id="keyword" placeholder="key words...">
             <br/>
             <hr>
             Type de retour :
@@ -46,7 +53,7 @@ Developped by xAnas
             <input type="checkbox" name="similarityoption[]" value="headline">Headline
             <input type="checkbox" name="similarityoption[]" value="keyword">Keyword
             <input type="checkbox" name="similarityoption[]" value="description">Description
-              <br/>
+            <br/>
             <hr>
             <br/>
             <input type="submit" value="chercher">
@@ -54,8 +61,18 @@ Developped by xAnas
         </form>
         <div class="tablespace"></div>
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="js/bootstrap.min.js"></script>
+        <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
+        <script src="js/jquery.min.js"></script>
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery.autocomplete.min.js"></script>
+        <script type="text/javascript">
+          $(document).ready(function () {
+              /*$('#keyword').autocomplete({
+                  serviceUrl: 'dbpedia/lookup.php',
+                  dataType: 'json'
+              });*/
+          });
+        </script>
     </body>
 </html>

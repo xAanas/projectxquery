@@ -17,6 +17,12 @@ $construire_tableau = 0;
 $context_des_mots_cles_saisis = array();
 
 // variable de similarité
+// extraire l'indice de similarité depuis le fichier de config
+$indice_de_similarite = 0;
+$similarity_indice_file = fopen('config/similarity_indice.txt', 'r+');
+$indice_de_similarite = fgets($similarity_indice_file);
+fclose($similarity_indice_file);
+
 $tableau_des_similarite = array();
 $construire_tableau_similarite = 0;
 // indicateur s'il y a un fichié uploadé par le client
@@ -24,6 +30,12 @@ $file_uploaded = 0;
 
 // récuperer les keywords
 $keywords = explode("+", $_POST['keywords']);
+
+// extraire le nombre minimal de keyword à trouver depuis le fichier de config
+$nombre_de_keyword_a_trouve = 1;
+$keyword_indice_file = fopen('config/keywords_indice.txt', 'r+');
+$nombre_de_keyword_a_trouve = fgets($keyword_indice_file) ;
+fclose($keyword_indice_file);
 
 // le context des keywords
 //$keywords_context = calcul_context($keywords);
@@ -101,7 +113,7 @@ try {
       }
       if (\count($similarityOption) > 0) {
         $similarite = $similarite / (\count($similarityOption));
-        if ($similarite > 0) {
+        if ($similarite > $indice_de_similarite) {
           $xml_file_list_final[] = $xml_file;
           $tableau_des_similarite[$xml_file] = $similarite;
           $construire_tableau_similarite = 1;
@@ -154,7 +166,7 @@ try {
     echo '</tr>';
     foreach ($tableau_a_afficher as $key => $resultats_a_afficher) {
       if (\count($resultats_a_afficher) > 0) {
-        if ($nombre_de_key_word_trouve[$key] > 1) {
+        if ($nombre_de_key_word_trouve[$key] > $nombre_de_keyword_a_trouve) {
           // insertion d'un ligne dans le tableau
           echo '<tr><td width="10%">' . $key . '</td><td width="15%">';
           foreach ($tableau_de_key_word_trouver[$key] as $word)
