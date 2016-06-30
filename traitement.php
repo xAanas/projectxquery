@@ -16,6 +16,9 @@ $construire_tableau = 0;
 // variable qui contient les contextes des mots clés saisis c'est un tableau de tableau
 $context_des_mots_cles_saisis = array();
 
+// tableau contenant les requetes de recherche executé
+$queries_execute = array();
+
 // variable de similarité
 // extraire l'indice de similarité depuis le fichier de config
 $indice_de_similarite = 0;
@@ -136,7 +139,9 @@ try {
     $nombre_de_key_word_trouve[$xml_file_list[$i]] = 0;
     foreach ($keywords as $keyword) {
       // run query on xml files
-      $resultat = recherche_keyword_in_xmlfile($keyword, $xml_file_list[$i], $session);
+      $resultat_de_la_recherche = recherche_keyword_in_xmlfile($keyword, $xml_file_list[$i], $session);
+      $resultat = $resultat_de_la_recherche['resultat'];
+      $queries_execute [] = $resultat_de_la_recherche['queries'];
       if ($resultat != "" && $resultat != NULL) {
         $tableau_a_afficher[$xml_file_list[$i]] = array_merge($tableau_a_afficher[$xml_file_list[$i]], $resultat);
         $tableau_de_key_word_trouver[$xml_file_list[$i]][] = $keyword;
@@ -188,9 +193,19 @@ try {
     echo '</table>';
   }
   else {
-    echo " no result :( ";
+    echo " no result :( <br/>";
   }
 
+  echo utf8_decode("<h3> les requêtes executé </h3>");
+  foreach ($queries_execute as $query_execute){
+    foreach($query_execute as $query_spec){
+      echo '<li>';
+      echo $query_spec;
+      echo '</li>';
+    }
+  }
+  echo '<br/>';
+  
   if ($construire_tableau_similarite > 0) {
     // Construction du tableau de similarité 
     echo '<table border="1"><tr><th>fichier</th><th>similarity</th></tr>';
@@ -324,288 +339,364 @@ function extact_file_keywords_php($filename) {
 function recherche_keyword_in_xmlfile($keyword, $xml_file, $session) {
   // dans ce tableau on va mettre les balises qui contiennent le mots clé
   $resultat = array();
-
+  // dans ce tableau on va mettre les requetes executés
+  $queries = array();
+  // contient le resultat final
+  $repense = array();
+  
   // vérifier si le mot clé existe dans la balise <catalogRef>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem
     where $x/catalogRef contains text "' . $keyword . '"
-    return $x/catalogRef');
+    return $x/catalogRef';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <rightsInfo><copyrightHolder>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/rightsInfo
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/rightsInfo
     where $x/copyrightHolder contains text "' . $keyword . '"
-    return $x/copyrightHolder');
+    return $x/copyrightHolder';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <rightsInfo><copyrightHolder>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/rightsInfo
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/rightsInfo
     where $x/copyrightNotice contains text "' . $keyword . '"
-    return $x/copyrightNotice');
+    return $x/copyrightNotice';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><itemClass>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
     where $x/itemClass contains text "' . $keyword . '"
-    return $x/itemClass');
+    return $x/itemClass';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><provider>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
     where $x/provider contains text "' . $keyword . '"
-    return $x/provider');
+    return $x/provider';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><versionCreated>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
     where $x/versionCreated contains text "' . $keyword . '"
-    return $x/versionCreated');
+    return $x/versionCreated';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><firstCreated>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
     where $x/firstCreated contains text "' . $keyword . '"
-    return $x/firstCreated');
+    return $x/firstCreated';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><pubStatus>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
     where $x/pubStatus contains text "' . $keyword . '"
-    return $x/pubStatus');
+    return $x/pubStatus';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <itemMeta><title>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/itemMeta
     where $x/title contains text "' . $keyword . '"
-    return $x/title');
+    return $x/title';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contentCreated>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
     where $x/contentCreated contains text "' . $keyword . '"
-    return $x/contentCreated');
+    return $x/contentCreated';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contentModified>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
     where $x/contentModified contains text "' . $keyword . '"
-    return $x/contentModified');
+    return $x/contentModified';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><located><name>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/located
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/located
     where $x/name contains text "' . $keyword . '"
-    return $x/name');
+    return $x/name';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><creator>[literal]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/creator
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/creator
     where $x/@literal contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contributor>[role]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/contributor
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/contributor
     where $x/@role contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><contributor>[literal]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/contributor
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/contributor
     where $x/@literal contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><altId>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
     where $x/altId contains text "' . $keyword . '"
-    return $x/altId');
+    return $x/altId';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><altId>[type]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/altId
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/altId
     where $x/@type contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><language>[tag]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/language
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/language
     where $x/@tag contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre>[qcode]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/genre
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/genre
     where $x/@qcode contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre><name>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/genre
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/genre
     where $x/name contains text "' . $keyword . '"
-    return $x/name');
+    return $x/name';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><genre><name>[xml:lang]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/genre/name
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/genre/name
     where $x/@xml:lang contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><keyword>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
     where $x/keyword contains text "' . $keyword . '"
-    return $x/keyword');
+    return $x/keyword';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject>[type]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/subject
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/subject
     where $x/@type contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject>[qcode]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/subject
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/subject
     where $x/@qcode contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><subject><name>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/subject
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/subject
     where $x/name contains text "' . $keyword . '"
-    return $x/name');
+    return $x/name';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><creditline>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
     where $x/creditline contains text "' . $keyword . '"
-    return $x/creditline');
+    return $x/creditline';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><headline>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
     where $x/headline contains text "' . $keyword . '"
-    return $x/headline');
+    return $x/headline';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><description>
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta
     where $x/description contains text "' . $keyword . '"
-    return $x/description');
+    return $x/description';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentMeta><description>[role]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/description
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentMeta/description
     where $x/@role contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[rendition]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
     where $x/@rendition contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[contenttype]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
     where $x/@contenttype contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[href]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
     where $x/@href contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[size]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
     where $x/@size contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[width]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
     where $x/@width contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
 
   // vérifier si le mot clé existe dans la balise <contentSet><remoteContent>[height]
-  $result = $session->execute('xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
+  $query = 'xquery for $x in doc("bdxml/' . $xml_file . '")/newsItem/contentSet/remoteContent
     where $x/@height contains text "' . $keyword . '"
-    return $x');
+    return $x';
+  $result = $session->execute($query);
   if ($result != "") {
     $resultat [] = '<li>' . htmlentities($result) . '</li>';
+    $queries [] = $query;
   }
-
-  return $resultat;
+  $repense['resultat'] = $resultat;
+  $repense['queries'] = $queries;
+  
+  return $repense;
 }
 
 /*
